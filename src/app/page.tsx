@@ -102,7 +102,7 @@ export default function Home() {
     if (state === "downloading" && taskId) {
       interval = setInterval(async () => {
         try {
-          const res = await fetch(`${API_URL}/api/status/${taskId}`);
+          const res = await fetch(`/api/status/${taskId}`);
           if (!res.ok) {
             throw new Error("Failed to fetch status");
           }
@@ -175,7 +175,7 @@ export default function Home() {
 
     changeState("loadingInfo", "none");
     try {
-      const res = await fetch(`${API_URL}/api/info?url=${encodeURIComponent(url)}`);
+      const res = await fetch(`/api/info?url=${encodeURIComponent(url)}`);
       if (!res.ok) throw new Error("Failed to fetch info");
       
       const data: VideoInfo = await res.json();
@@ -221,7 +221,7 @@ export default function Home() {
     changeState("downloading", "push");
     setProgress(0);
     try {
-      const res = await fetch(`${API_URL}/api/download`, {
+      const res = await fetch(`/api/download`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
