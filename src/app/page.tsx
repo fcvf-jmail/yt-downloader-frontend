@@ -49,9 +49,7 @@ function formatDuration(secStr: string) {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-// ИСПОЛЬЗУЕМ ПЕРЕМЕННУЮ ОКРУЖЕНИЯ ВМЕСТО ХАРДКОДА
-// Если переменной нет (например, при локальной разработке), фоллбэк на localhost
-const DIRECT_VPS_URL = process.env.NEXT_PUBLIC_DIRECT_VPS_URL || "http://localhost:8080";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 export default function Home() {
   const [state, setState] = useState<AppState>("initial");
@@ -157,13 +155,13 @@ export default function Home() {
       ext = selectedAudioFormat?.ext || "mp3";
     }
 
-    // Формируем прямую ссылку на скачивание, используя переменную окружения
-    const downloadUrl = `${DIRECT_VPS_URL}/api/file?id=${videoId}&height=${height}&ext=${ext}&title=${encodeURIComponent(videoInfo.title)}`;
+    const downloadUrl = `${API_URL}/api/file?id=${videoId}&height=${height}&ext=${ext}&title=${encodeURIComponent(videoInfo.title)}`;
 
-    // Пытаемся открыть в новой вкладке (помогает избежать блокировок Mixed Content)
+    // --- ИСПРАВЛЕНИЕ ЗДЕСЬ ---
+    // Пытаемся открыть ссылку в новой вкладке
     const newWindow = window.open(downloadUrl, '_blank');
 
-    // Если браузер заблокировал всплывающее окно (pop-up), делаем фоллбэк в этой же вкладке
+    // Если браузер заблокировал открытие новой вкладки, переходим в текущей
     if (!newWindow) {
       window.location.href = downloadUrl;
     }
