@@ -74,28 +74,17 @@
       setState(newState);
     };
 
+    // --- ПРЕДОХРАНИТЕЛЬ ОТ ПУСТОГО ЭКРАНА ПРИ ПЕРЕЗАГРУЗКЕ ---
     useEffect(() => {
-      if (typeof window !== "undefined") {
-        const currentState = window.history.state;
-        if (currentState && currentState.step) {
-          setState(currentState.step as AppState);
-        } else {
-          window.history.replaceState({ ...currentState, step: state }, "");
-        }
+      if (
+        (state === "videoDetails" || state === "downloading" || state === "success") &&
+        !videoInfo
+      ) {
+        // Если стейт продвинулся, а данных о видео нет (например, после обновления страницы F5),
+        // принудительно сбрасываем всё в начальное состояние, чтобы появилась строка поиска.
+        changeState("initial", "replace");
       }
-
-      const handlePopState = (e: PopStateEvent) => {
-        if (e.state && e.state.step) {
-          setState(e.state.step as AppState);
-        } else {
-          setState("initial");
-        }
-      };
-
-      window.addEventListener("popstate", handlePopState);
-      return () => window.removeEventListener("popstate", handlePopState);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [state, videoInfo]);
 
     useEffect(() => {
       let interval: NodeJS.Timeout;
