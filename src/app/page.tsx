@@ -49,7 +49,9 @@ function formatDuration(secStr: string) {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+// ИСПОЛЬЗУЕМ ПЕРЕМЕННУЮ ОКРУЖЕНИЯ ВМЕСТО ХАРДКОДА
+// Если переменной нет (например, при локальной разработке), фоллбэк на localhost
+const DIRECT_VPS_URL = process.env.NEXT_PUBLIC_DIRECT_VPS_URL || "http://localhost:8080";
 
 export default function Home() {
   const [state, setState] = useState<AppState>("initial");
@@ -83,7 +85,7 @@ export default function Home() {
         window.history.replaceState({ ...currentState, step: state }, "");
       }
     }
-    
+
     const handlePopState = (e: PopStateEvent) => {
       if (e.state && e.state.step) {
         setState(e.state.step as AppState);
@@ -91,7 +93,7 @@ export default function Home() {
         setState("initial");
       }
     };
-    
+
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -133,7 +135,7 @@ export default function Home() {
 
   const triggerDownload = () => {
     if (!videoInfo) return;
-    
+
     let videoId = "";
     try {
       const urlObj = new URL(url);
@@ -141,7 +143,7 @@ export default function Home() {
     } catch {
       // fallback
     }
-    
+
     let height = "1080";
     let ext = "mp4";
 
@@ -154,11 +156,17 @@ export default function Home() {
       height = "NA";
       ext = selectedAudioFormat?.ext || "mp3";
     }
-    
-    const downloadUrl = `${API_URL}/api/file?id=${videoId}&height=${height}&ext=${ext}&title=${encodeURIComponent(videoInfo.title)}`;
-    
-    // Заменяем iframe на прямой переход
-    window.location.href = downloadUrl;
+
+    // Формируем прямую ссылку на скачивание, используя переменную окружения
+    const downloadUrl = `${DIRECT_VPS_URL}/api/file?id=${videoId}&height=${height}&ext=${ext}&title=${encodeURIComponent(videoInfo.title)}`;
+
+    // Пытаемся открыть в новой вкладке (помогает избежать блокировок Mixed Content)
+    const newWindow = window.open(downloadUrl, '_blank');
+
+    // Если браузер заблокировал всплывающее окно (pop-up), делаем фоллбэк в этой же вкладке
+    if (!newWindow) {
+      window.location.href = downloadUrl;
+    }
   };
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -169,10 +177,10 @@ export default function Home() {
     try {
       const res = await fetch(`/api/info?url=${encodeURIComponent(url)}`);
       if (!res.ok) throw new Error("Failed to fetch info");
-      
+
       const data: VideoInfo = await res.json();
       setVideoInfo(data);
-      
+
       const vFormats = data.formats.filter(f => {
         if (!f.resolution) return false;
         if (f.resolution === '0x0') return false;
@@ -184,9 +192,9 @@ export default function Home() {
         if (!x) return acc.concat([current]);
         return acc;
       }, []);
-      
+
       const aFormats = data.formats.filter(f => f.has_audio && !!f.audio_bitrate);
-      
+
       if (vFormats.length > 0) {
         const defaultVideo = vFormats[0];
         setSelectedVideoFormatId(defaultVideo.format_id);
@@ -206,8 +214,8 @@ export default function Home() {
 
   const handleDownloadStart = async () => {
     if (!selectedVideoFormatId && !selectedAudioFormatId) {
-       toast.error("Выберите формат для скачивания");
-       return;
+      toast.error("Выберите формат для скачивания");
+      return;
     }
 
     changeState("downloading", "push");
@@ -243,7 +251,7 @@ export default function Home() {
     if (!x) return acc.concat([current]);
     return acc;
   }, []) || [];
-  
+
   const audioFormats = videoInfo?.formats.filter(f => f.has_audio && !!f.audio_bitrate) || [];
 
   const isDownloadDisabled = !selectedVideoFormatId && !selectedAudioFormatId;
@@ -317,11 +325,10 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => setSelectedVideoFormatId("")}
-                  className={`p-4 rounded-xl border text-left flex flex-col gap-2 transition-all ${
-                    selectedVideoFormatId === ""
+                  className={`p-4 rounded-xl border text-left flex flex-col gap-2 transition-all ${selectedVideoFormatId === ""
                       ? "border-white shadow-[0_0_15px_rgba(255,255,255,0.2)] bg-white/10"
                       : "border-gray-800 hover:border-gray-500 bg-[#111111]"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-2">
                     <Music className="w-5 h-5 text-white" />
@@ -344,11 +351,10 @@ export default function Home() {
                         }
                       }
                     }}
-                    className={`p-4 rounded-xl border text-left flex flex-col gap-2 transition-all ${
-                      selectedVideoFormatId === f.format_id
+                    className={`p-4 rounded-xl border text-left flex flex-col gap-2 transition-all ${selectedVideoFormatId === f.format_id
                         ? "border-white shadow-[0_0_15px_rgba(255,255,255,0.2)] bg-white/10"
                         : "border-gray-800 hover:border-gray-500 bg-[#111111]"
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-2">
                       <Video className="w-5 h-5 text-white" />
@@ -370,11 +376,10 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => setSelectedAudioFormatId("")}
-                  className={`p-4 rounded-xl border text-left flex flex-col gap-2 transition-all ${
-                    selectedAudioFormatId === ""
+                  className={`p-4 rounded-xl border text-left flex flex-col gap-2 transition-all ${selectedAudioFormatId === ""
                       ? "border-white shadow-[0_0_15px_rgba(255,255,255,0.2)] bg-white/10"
                       : "border-gray-800 hover:border-gray-500 bg-[#111111]"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-2">
                     <Video className="w-5 h-5 text-white" />
@@ -394,36 +399,36 @@ export default function Home() {
                   }
 
                   return (
-                  <button
-                    key={f.format_id}
-                    type="button"
-                    disabled={!isCompatible}
-                    onClick={() => {
-                      setSelectedAudioFormatId(f.format_id);
-                      if (selectedVideoFormatId) {
-                        const selVideo = videoFormats.find(v => v.format_id === selectedVideoFormatId);
-                        if (selVideo && !isCompatibleCombination(selVideo.ext, f.ext)) {
-                          setSelectedVideoFormatId("");
+                    <button
+                      key={f.format_id}
+                      type="button"
+                      disabled={!isCompatible}
+                      onClick={() => {
+                        setSelectedAudioFormatId(f.format_id);
+                        if (selectedVideoFormatId) {
+                          const selVideo = videoFormats.find(v => v.format_id === selectedVideoFormatId);
+                          if (selVideo && !isCompatibleCombination(selVideo.ext, f.ext)) {
+                            setSelectedVideoFormatId("");
+                          }
                         }
-                      }
-                    }}
-                    className={`p-4 rounded-xl border text-left flex flex-col gap-2 transition-all ${
-                      selectedAudioFormatId === f.format_id
-                        ? "border-white shadow-[0_0_15px_rgba(255,255,255,0.2)] bg-white/10"
-                        : "border-gray-800 hover:border-gray-500 bg-[#111111]"
-                    } ${!isCompatible ? "opacity-50 cursor-not-allowed" : ""}`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Music className="w-5 h-5 text-white" />
-                      <span className="font-bold text-white">
-                        {f.audio_bitrate ? `${Math.round(f.audio_bitrate)} kbps` : f.ext}
-                      </span>
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {f.ext} • {formatBytes(f.filesize_bytes)}
-                    </div>
-                  </button>
-                )})}
+                      }}
+                      className={`p-4 rounded-xl border text-left flex flex-col gap-2 transition-all ${selectedAudioFormatId === f.format_id
+                          ? "border-white shadow-[0_0_15px_rgba(255,255,255,0.2)] bg-white/10"
+                          : "border-gray-800 hover:border-gray-500 bg-[#111111]"
+                        } ${!isCompatible ? "opacity-50 cursor-not-allowed" : ""}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Music className="w-5 h-5 text-white" />
+                        <span className="font-bold text-white">
+                          {f.audio_bitrate ? `${Math.round(f.audio_bitrate)} kbps` : f.ext}
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {f.ext} • {formatBytes(f.filesize_bytes)}
+                      </div>
+                    </button>
+                  )
+                })}
               </div>
             </div>
 
@@ -459,7 +464,7 @@ export default function Home() {
                 </div>
               )}
             </div>
-            
+
             <div className="space-y-3">
               <h2 className="text-2xl font-bold tracking-tight">
                 {state === "downloading" ? `Скачивание... ${progress}%` : "Готово!"}
@@ -468,16 +473,16 @@ export default function Home() {
                 <p className="text-gray-400 text-sm">Пожалуйста, не закрывайте вкладку</p>
               )}
             </div>
-            
+
             <div className="w-full max-w-md mx-auto bg-[#111111] rounded-full h-3 overflow-hidden border border-gray-800">
-              <div 
-                className="bg-white h-full transition-all duration-300 ease-out shadow-[0_0_10px_rgba(255,255,255,0.5)] relative" 
+              <div
+                className="bg-white h-full transition-all duration-300 ease-out shadow-[0_0_10px_rgba(255,255,255,0.5)] relative"
                 style={{ width: `${progress}%` }}
               >
                 <div className="absolute inset-0 bg-white/40 w-full animate-[shimmer_2s_infinite]" style={{ transform: 'translateX(-100%)' }}></div>
               </div>
             </div>
-            
+
             {state === "success" && (
               <button
                 onClick={() => {
@@ -494,7 +499,8 @@ export default function Home() {
           </div>
         )}
       </div>
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes shimmer {
           100% { transform: translateX(100%); }
         }
