@@ -157,16 +157,8 @@ export default function Home() {
     
     const downloadUrl = `${API_URL}/api/file?id=${videoId}&height=${height}&ext=${ext}&title=${encodeURIComponent(videoInfo.title)}`;
     
-    const iframe = document.createElement("iframe");
-    iframe.style.display = "none";
-    iframe.src = downloadUrl;
-    document.body.appendChild(iframe);
-
-    setTimeout(() => {
-      if (document.body.contains(iframe)) {
-        document.body.removeChild(iframe);
-      }
-    }, 10000);
+    // Заменяем iframe на прямой переход
+    window.location.href = downloadUrl;
   };
 
   const handleSearch = async (e: React.FormEvent) => {
