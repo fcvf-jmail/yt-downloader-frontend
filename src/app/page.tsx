@@ -49,7 +49,6 @@ function formatDuration(secStr: string) {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-// Указываем IP сервера жестко для фоллбэка, чтобы точно работало скачивание файлов напрямую
 const DIRECT_VPS_URL = process.env.NEXT_PUBLIC_API_URL || "http://151.244.72.124:8080";
 
 export default function Home() {
@@ -75,7 +74,6 @@ export default function Home() {
     setState(newState);
   };
 
-  // 1. Восстановление состояния
   useEffect(() => {
     if (typeof window !== "undefined") {
       const currentState = window.history.state;
@@ -99,14 +97,12 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 2. ПРЕДОХРАНИТЕЛЬ ОТ ЧЕРНОГО ЭКРАНА (Если обновили страницу F5)
   useEffect(() => {
     if ((state === "videoDetails" || state === "downloading" || state === "success") && !videoInfo) {
       changeState("initial", "replace");
     }
   }, [state, videoInfo]);
 
-  // 3. Поллинг статуса задачи
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (state === "downloading" && taskId) {
@@ -121,7 +117,6 @@ export default function Home() {
             clearInterval(interval);
             setProgress(100);
             changeState("success", "replace");
-            // УБРАНО АВТОМАТИЧЕСКОЕ СКАЧИВАНИЕ! Теперь пользователь кликнет сам.
           } else if (data.status === "failed") {
             clearInterval(interval);
             toast.error("Ошибка скачивания.");
@@ -141,7 +136,6 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state, taskId]);
 
-  // Функция для генерации ссылки на скачивание
   const getDownloadUrl = () => {
     if (!videoInfo) return "#";
 
@@ -487,7 +481,6 @@ export default function Home() {
 
             {state === "success" && (
               <div className="flex flex-col gap-3 mt-6">
-                {/* МАГИЯ ЗДЕСЬ: Прямая ссылка для ручного клика */}
                 <a
                   href={getDownloadUrl()}
                   target="_blank"
@@ -498,8 +491,9 @@ export default function Home() {
                   Сохранить на устройство
                 </a>
 
+                {/* ИСПРАВЛЕНА ЭТА СТРОКА */}
                 <p className="text-xs text-gray-500 max-w-md mx-auto">
-                  *Если браузер напишет "Небезопасное скачивание", нажмите "Сохранить" (это связано с HTTP-протоколом сервера).
+                  *Если браузер напишет &quot;Небезопасное скачивание&quot;, нажмите &quot;Сохранить&quot; (это связано с HTTP-протоколом сервера).
                 </p>
 
                 <button
