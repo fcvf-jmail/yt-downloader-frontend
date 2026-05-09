@@ -49,6 +49,8 @@ function formatDuration(secStr: string) {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+
 export default function Home() {
   const [state, setState] = useState<AppState>("initial");
   const [url, setUrl] = useState("");
@@ -100,7 +102,7 @@ export default function Home() {
     if (state === "downloading" && taskId) {
       interval = setInterval(async () => {
         try {
-          const res = await fetch(`http://localhost:8080/api/status/${taskId}`);
+          const res = await fetch(`${API_URL}/api/status/${taskId}`);
           if (!res.ok) {
             throw new Error("Failed to fetch status");
           }
@@ -153,7 +155,7 @@ export default function Home() {
       ext = selectedAudioFormat?.ext || "mp3";
     }
     
-    const downloadUrl = `http://localhost:8080/api/file?id=${videoId}&height=${height}&ext=${ext}&title=${encodeURIComponent(videoInfo.title)}`;
+    const downloadUrl = `${API_URL}/api/file?id=${videoId}&height=${height}&ext=${ext}&title=${encodeURIComponent(videoInfo.title)}`;
     
     const iframe = document.createElement("iframe");
     iframe.style.display = "none";
@@ -173,7 +175,7 @@ export default function Home() {
 
     changeState("loadingInfo", "none");
     try {
-      const res = await fetch(`http://localhost:8080/api/info?url=${encodeURIComponent(url)}`);
+      const res = await fetch(`${API_URL}/api/info?url=${encodeURIComponent(url)}`);
       if (!res.ok) throw new Error("Failed to fetch info");
       
       const data: VideoInfo = await res.json();
@@ -219,7 +221,7 @@ export default function Home() {
     changeState("downloading", "push");
     setProgress(0);
     try {
-      const res = await fetch("http://localhost:8080/api/download", {
+      const res = await fetch(`${API_URL}/api/download`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
