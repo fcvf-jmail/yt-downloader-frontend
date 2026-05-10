@@ -1,15 +1,5 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  async rewrites() {
-    // Proxy all API requests to the backend to bypass CORS
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${backendUrl}/api/:path*`,
-      },
-    ];
-  },
-};
+const nextConfig = {};
 
 export default nextConfig;
+// (или export default nextConfig; если файл .mjs)
