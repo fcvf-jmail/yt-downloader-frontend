@@ -109,7 +109,6 @@ export default function Home() {
     if (state === "downloading" && taskId) {
       interval = setInterval(async () => {
         try {
-          // ДОБАВЛЕН ЗАГОЛОВОК ДЛЯ NGROK
           const res = await fetch(`/api/status/${taskId}`, {
             headers: { "ngrok-skip-browser-warning": "true" }
           });
@@ -144,11 +143,20 @@ export default function Home() {
     if (!videoInfo) return "#";
 
     let videoId = "";
-    try {
-      const urlObj = new URL(url);
-      videoId = urlObj.searchParams.get("v") || urlObj.pathname.split("/").pop() || "";
-    } catch {
-      // fallback
+    // Идеальная регулярка для любых ссылок YouTube (включая Shorts)
+    const ytRegex = /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/;
+    const match = url.match(ytRegex);
+
+    if (match && match[1]) {
+      videoId = match[1];
+    } else {
+      // Надежный фоллбэк, если регулярка почему-то не справилась
+      try {
+        const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`);
+        videoId = urlObj.searchParams.get("v") || urlObj.pathname.split("/").pop() || "unknown_id";
+      } catch {
+        videoId = "unknown_id";
+      }
     }
 
     let height = "1080";
@@ -173,7 +181,6 @@ export default function Home() {
 
     changeState("loadingInfo", "none");
     try {
-      // ДОБАВЛЕН ЗАГОЛОВОК ДЛЯ NGROK
       const res = await fetch(`/api/info?url=${encodeURIComponent(url)}`, {
         headers: { "ngrok-skip-browser-warning": "true" }
       });
@@ -222,7 +229,6 @@ export default function Home() {
     changeState("downloading", "push");
     setProgress(0);
     try {
-      // ДОБАВЛЕН ЗАГОЛОВОК ДЛЯ NGROK
       const res = await fetch(`/api/download`, {
         method: "POST",
         headers: {
@@ -331,8 +337,8 @@ export default function Home() {
                   type="button"
                   onClick={() => setSelectedVideoFormatId("")}
                   className={`p-4 rounded-xl border text-left flex flex-col gap-2 transition-all ${selectedVideoFormatId === ""
-                      ? "border-white shadow-[0_0_15px_rgba(255,255,255,0.2)] bg-white/10"
-                      : "border-gray-800 hover:border-gray-500 bg-[#111111]"
+                    ? "border-white shadow-[0_0_15px_rgba(255,255,255,0.2)] bg-white/10"
+                    : "border-gray-800 hover:border-gray-500 bg-[#111111]"
                     }`}
                 >
                   <div className="flex items-center gap-2">
@@ -357,8 +363,8 @@ export default function Home() {
                       }
                     }}
                     className={`p-4 rounded-xl border text-left flex flex-col gap-2 transition-all ${selectedVideoFormatId === f.format_id
-                        ? "border-white shadow-[0_0_15px_rgba(255,255,255,0.2)] bg-white/10"
-                        : "border-gray-800 hover:border-gray-500 bg-[#111111]"
+                      ? "border-white shadow-[0_0_15px_rgba(255,255,255,0.2)] bg-white/10"
+                      : "border-gray-800 hover:border-gray-500 bg-[#111111]"
                       }`}
                   >
                     <div className="flex items-center gap-2">
@@ -382,8 +388,8 @@ export default function Home() {
                   type="button"
                   onClick={() => setSelectedAudioFormatId("")}
                   className={`p-4 rounded-xl border text-left flex flex-col gap-2 transition-all ${selectedAudioFormatId === ""
-                      ? "border-white shadow-[0_0_15px_rgba(255,255,255,0.2)] bg-white/10"
-                      : "border-gray-800 hover:border-gray-500 bg-[#111111]"
+                    ? "border-white shadow-[0_0_15px_rgba(255,255,255,0.2)] bg-white/10"
+                    : "border-gray-800 hover:border-gray-500 bg-[#111111]"
                     }`}
                 >
                   <div className="flex items-center gap-2">
@@ -418,8 +424,8 @@ export default function Home() {
                         }
                       }}
                       className={`p-4 rounded-xl border text-left flex flex-col gap-2 transition-all ${selectedAudioFormatId === f.format_id
-                          ? "border-white shadow-[0_0_15px_rgba(255,255,255,0.2)] bg-white/10"
-                          : "border-gray-800 hover:border-gray-500 bg-[#111111]"
+                        ? "border-white shadow-[0_0_15px_rgba(255,255,255,0.2)] bg-white/10"
+                        : "border-gray-800 hover:border-gray-500 bg-[#111111]"
                         } ${!isCompatible ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
                       <div className="flex items-center gap-2">
